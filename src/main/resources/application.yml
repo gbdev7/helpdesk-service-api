@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: helpdesk-api
+  profiles:
+    active: dev
+
+server:
+  port: 8080
+
+api:
+  security:
+    token:
+      secret: minha-chave-secreta-muito-segura-com-no-minimo-32-caracteres-helpdesk-api
+      expiration: 86400000

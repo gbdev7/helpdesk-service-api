@@ -1,0 +1,26 @@
+### 1. Criar Usuário (Público)
+POST http://localhost:8080/api/v1/users
+Content-Type: application/json
+
+{
+  "name": "Gabriel Santos",
+  "email": "gabriel@test.com",
+  "password": "senhaSegura123",
+  "role": "ADMIN"
+}
+
+### 2. Autenticar / Login (Público)
+POST http://localhost:8080/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "gabriel@test.com",
+  "password": "senhaSegura123"
+}
+
+### 3. Testar Acesso sem Token (Deve retornar 403 Forbidden)
+GET http://localhost:8080/api/v1/users
+
+### 4. Testar Acesso com Token JWT (Deve retornar 200 OK)
+GET http://localhost:8080/api/v1/users
+Authorization: Bearer COLE_O_TOKEN_AQUI
