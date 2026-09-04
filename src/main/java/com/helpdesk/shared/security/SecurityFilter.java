@@ -43,7 +43,8 @@ public class SecurityFilter extends OncePerRequestFilter {
                             new SimpleGrantedAuthority("ROLE_" + user.getRole().name())
                     );
 
-                    var authentication = new UsernamePasswordAuthenticationToken(user, null, authorities);
+                    // Passamos 'user.getEmail()' em vez do objeto 'user'
+                    var authentication = new UsernamePasswordAuthenticationToken(user.getEmail(), null, authorities);
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
             }
