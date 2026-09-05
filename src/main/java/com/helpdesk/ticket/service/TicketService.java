@@ -1,14 +1,20 @@
 package com.helpdesk.ticket.service;
 
 import com.helpdesk.ticket.domain.Ticket;
+import com.helpdesk.ticket.domain.TicketComment;
+import com.helpdesk.ticket.dto.TicketCommentCreateDTO;
+import com.helpdesk.ticket.dto.TicketCommentResponseDTO;
 import com.helpdesk.ticket.dto.TicketCreateDTO;
 import com.helpdesk.ticket.dto.TicketResponseDTO;
+import com.helpdesk.ticket.dto.TicketStatusUpdateDTO;
+import com.helpdesk.ticket.repository.TicketCommentRepository;
 import com.helpdesk.ticket.repository.TicketRepository;
 import com.helpdesk.user.domain.User;
 import com.helpdesk.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -16,10 +22,16 @@ public class TicketService {
 
     private final TicketRepository ticketRepository;
     private final UserRepository userRepository;
+    private final TicketCommentRepository commentRepository;
 
-    public TicketService(TicketRepository ticketRepository, UserRepository userRepository) {
+    public TicketService(
+            TicketRepository ticketRepository,
+            UserRepository userRepository,
+            TicketCommentRepository commentRepository
+    ) {
         this.ticketRepository = ticketRepository;
         this.userRepository = userRepository;
+        this.commentRepository = commentRepository;
     }
 
     @Transactional
@@ -39,5 +51,50 @@ public class TicketService {
                 .stream()
                 .map(TicketResponseDTO::fromEntity)
                 .toList();
+    }
+
+    @Transactional
+    public TicketCommentResponseDTO addComment(Long ticketId, TicketCommentCreateDTO dto, String userEmail) {
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Chamado não encontrado"));
+
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        TicketComment comment = new TicketComment(dto.content(), ticket, user);
+        TicketComment savedComment = commentRepository.save(comment);
+
+        return TicketCommentResponseDTO.fromEntity(savedComment);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TicketCommentResponseDTO> getCommentsByTicket(Long ticketId) {
+        if (!ticketRepository.existsById(ticketId)) {
+            throw new RuntimeException("Chamado não encontrado");
+        }
+
+        return commentRepository.findByTicketIdOrderByCreatedAtAsc(ticketId)
+                .stream()
+                .map(TicketCommentResponseDTO::fromEntity)
+                .toList();
+    }
+
+    @Transactional
+    public TicketResponseDTO updateStatus(Long ticketId, TicketStatusUpdateDTO dto) {
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Chamado não encontrado"));
+
+        ticket.setStatus(dto.status());
+
+        if (dto.technicianId() != null) {
+            User technician = userRepository.findById(dto.technicianId())
+                    .orElseThrow(() -> new RuntimeException("Técnico não encontrado"));
+            ticket.setTechnician(technician);
+        }
+
+        ticket.setUpdatedAt(LocalDateTime.now());
+        Ticket updatedTicket = ticketRepository.save(ticket);
+
+        return TicketResponseDTO.fromEntity(updatedTicket);
     }
 }
