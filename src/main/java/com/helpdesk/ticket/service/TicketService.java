@@ -3,6 +3,8 @@ package com.helpdesk.ticket.service;
 import com.helpdesk.shared.exception.ResourceNotFoundException;
 import com.helpdesk.ticket.domain.Ticket;
 import com.helpdesk.ticket.domain.TicketComment;
+import com.helpdesk.ticket.domain.TicketPriority;
+import com.helpdesk.ticket.domain.TicketStatus;
 import com.helpdesk.ticket.dto.TicketCommentCreateDTO;
 import com.helpdesk.ticket.dto.TicketCommentResponseDTO;
 import com.helpdesk.ticket.dto.TicketCreateDTO;
@@ -12,6 +14,8 @@ import com.helpdesk.ticket.repository.TicketCommentRepository;
 import com.helpdesk.ticket.repository.TicketRepository;
 import com.helpdesk.user.domain.User;
 import com.helpdesk.user.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,11 +51,9 @@ public class TicketService {
     }
 
     @Transactional(readOnly = true)
-    public List<TicketResponseDTO> findAll() {
-        return ticketRepository.findAll()
-                .stream()
-                .map(TicketResponseDTO::fromEntity)
-                .toList();
+    public Page<TicketResponseDTO> findAll(TicketStatus status, TicketPriority priority, Pageable pageable) {
+        return ticketRepository.findByFilters(status, priority, pageable)
+                .map(TicketResponseDTO::fromEntity);
     }
 
     @Transactional

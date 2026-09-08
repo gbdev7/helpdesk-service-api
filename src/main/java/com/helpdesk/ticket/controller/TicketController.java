@@ -1,5 +1,7 @@
 package com.helpdesk.ticket.controller;
 
+import com.helpdesk.ticket.domain.TicketPriority;
+import com.helpdesk.ticket.domain.TicketStatus;
 import com.helpdesk.ticket.dto.TicketCommentCreateDTO;
 import com.helpdesk.ticket.dto.TicketCommentResponseDTO;
 import com.helpdesk.ticket.dto.TicketCreateDTO;
@@ -7,6 +9,10 @@ import com.helpdesk.ticket.dto.TicketResponseDTO;
 import com.helpdesk.ticket.dto.TicketStatusUpdateDTO;
 import com.helpdesk.ticket.service.TicketService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -35,8 +41,12 @@ public class TicketController {
     }
 
     @GetMapping
-    public ResponseEntity<List<TicketResponseDTO>> findAll() {
-        List<TicketResponseDTO> tickets = ticketService.findAll();
+    public ResponseEntity<Page<TicketResponseDTO>> findAll(
+            @RequestParam(required = false) TicketStatus status,
+            @RequestParam(required = false) TicketPriority priority,
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        Page<TicketResponseDTO> tickets = ticketService.findAll(status, priority, pageable);
         return ResponseEntity.ok(tickets);
     }
 
