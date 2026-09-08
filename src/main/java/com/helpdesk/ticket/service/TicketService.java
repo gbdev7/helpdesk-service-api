@@ -1,5 +1,6 @@
 package com.helpdesk.ticket.service;
 
+import com.helpdesk.shared.exception.ResourceNotFoundException;
 import com.helpdesk.ticket.domain.Ticket;
 import com.helpdesk.ticket.domain.TicketComment;
 import com.helpdesk.ticket.dto.TicketCommentCreateDTO;
@@ -37,7 +38,7 @@ public class TicketService {
     @Transactional
     public TicketResponseDTO create(TicketCreateDTO dto, String userEmail) {
         User customer = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado com e-mail: " + userEmail));
 
         Ticket ticket = new Ticket(dto.title(), dto.description(), dto.priority(), customer);
         Ticket savedTicket = ticketRepository.save(ticket);
@@ -56,10 +57,10 @@ public class TicketService {
     @Transactional
     public TicketCommentResponseDTO addComment(Long ticketId, TicketCommentCreateDTO dto, String userEmail) {
         Ticket ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new RuntimeException("Chamado não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Chamado não encontrado com ID: " + ticketId));
 
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado com e-mail: " + userEmail));
 
         TicketComment comment = new TicketComment(dto.content(), ticket, user);
         TicketComment savedComment = commentRepository.save(comment);
@@ -70,7 +71,7 @@ public class TicketService {
     @Transactional(readOnly = true)
     public List<TicketCommentResponseDTO> getCommentsByTicket(Long ticketId) {
         if (!ticketRepository.existsById(ticketId)) {
-            throw new RuntimeException("Chamado não encontrado");
+            throw new ResourceNotFoundException("Chamado não encontrado com ID: " + ticketId);
         }
 
         return commentRepository.findByTicketIdOrderByCreatedAtAsc(ticketId)
@@ -82,13 +83,13 @@ public class TicketService {
     @Transactional
     public TicketResponseDTO updateStatus(Long ticketId, TicketStatusUpdateDTO dto) {
         Ticket ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new RuntimeException("Chamado não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Chamado não encontrado com ID: " + ticketId));
 
         ticket.setStatus(dto.status());
 
         if (dto.technicianId() != null) {
             User technician = userRepository.findById(dto.technicianId())
-                    .orElseThrow(() -> new RuntimeException("Técnico não encontrado"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Técnico não encontrado com ID: " + dto.technicianId()));
             ticket.setTechnician(technician);
         }
 
